@@ -1,5 +1,5 @@
 // Smart Contract Simulator - Blockchain Rules
-export type Role = 'founder' | 'engineer' | 'marketing'
+export type Role = 'owner' | 'founder' | 'engineer' | 'marketing'
 
 export interface DocumentField {
   name: string
@@ -23,6 +23,12 @@ export const masterDocument = {
 
 // Smart Contract Rules (immutable blockchain rules)
 export const accessRules: Record<Role, Record<string, AccessPolicy>> = {
+  owner: {
+    revenue: { canView: true, canMask: false },
+    risks: { canView: true, canMask: false },
+    roadmap: { canView: true, canMask: false },
+    marketSize: { canView: true, canMask: false },
+  },
   founder: {
     revenue: { canView: true, canMask: false },
     risks: { canView: true, canMask: false },
