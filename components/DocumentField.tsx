@@ -4,8 +4,7 @@ import { useState, useEffect } from 'react'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { getPartialMask, verifyBlockchainAccess, type Role } from '@/lib/smartContract'
-import { useMetaMask } from '@/app/providers'
-import { Lock, Eye, Sparkles, Zap } from 'lucide-react'
+import { Lock, Eye, Sparkles } from 'lucide-react'
 
 interface DocumentFieldProps {
   fieldName: string
@@ -22,28 +21,20 @@ export function DocumentField({
   accessType,
   role,
 }: DocumentFieldProps) {
-  const { account, contract } = useMetaMask()
   const [displayValue, setDisplayValue] = useState<string>('')
   const [isLoading, setIsLoading] = useState(false)
   const [isVerifying, setIsVerifying] = useState(true)
   const [semanticContent, setSemanticContent] = useState<string | null>(null)
-  const [txHash, setTxHash] = useState<string | null>(null)
 
-  // Verify access via blockchain
+  // Simulate blockchain verification
   useEffect(() => {
     setIsVerifying(true)
     const verify = async () => {
-      if (account) {
-        try {
-          await verifyBlockchainAccess(contract, account, fieldName as any)
-        } catch (error) {
-          console.error('[DocumentField] Error verifying access:', error)
-        }
-      }
+      await verifyBlockchainAccess(role, fieldName as any, '0x' + role)
       setIsVerifying(false)
     }
     verify()
-  }, [account, contract, fieldName, role])
+  }, [role, fieldName])
 
   // Update display based on access type
   useEffect(() => {
@@ -181,23 +172,6 @@ export function DocumentField({
           {accessType === 'semantic' && 'Blockchain rule: Semantic masking via Gemini AI'}
           {accessType === 'full' && 'Blockchain rule: Full access granted for this role'}
         </div>
-
-        {/* Blockchain Verification Status */}
-        {txHash && (
-          <div className="text-xs flex items-center gap-2 px-2 py-1 rounded bg-primary/10 border border-primary/20 text-primary">
-            <Zap className="w-3 h-3 flex-shrink-0" />
-            <span>Verified on blockchain</span>
-            <a
-              href={`https://sepolia.etherscan.io/tx/${txHash}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="underline hover:text-primary-foreground truncate"
-              title={txHash}
-            >
-              {txHash.slice(0, 10)}...
-            </a>
-          </div>
-        )}
       </div>
     </Card>
   )

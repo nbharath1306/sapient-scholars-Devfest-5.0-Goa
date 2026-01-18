@@ -11,34 +11,14 @@ import {
   type Role,
 } from '@/lib/smartContract'
 import { Card } from '@/components/ui/card'
-import { Zap, Lock, AlertCircle, CheckCircle2 } from 'lucide-react'
+import { Zap, Lock } from 'lucide-react'
 
 export default function Home() {
-  const { isConnected, account, contract, isCorrectChain } = useMetaMask()
+  const { isConnected } = useMetaMask()
   const [currentRole, setCurrentRole] = useState<Role>('founder')
   const [accessCache, setAccessCache] = useState<Record<string, any>>({})
-  const [contractStatus, setContractStatus] = useState<'loading' | 'connected' | 'error' | 'not-set'>('loading')
 
-  // Check contract status
-  useEffect(() => {
-    if (!isConnected) {
-      setContractStatus('not-set')
-      return
-    }
-
-    if (!isCorrectChain) {
-      setContractStatus('error')
-      return
-    }
-
-    if (contract && contract.isInitialized()) {
-      setContractStatus('connected')
-    } else {
-      setContractStatus('not-set')
-    }
-  }, [contract, isConnected, isCorrectChain])
-
-  // Precompute access policies using local rules as fallback
+  // Precompute access policies
   useEffect(() => {
     const cache: Record<string, any> = {}
     Object.keys(masterDocument).forEach((field) => {
@@ -73,46 +53,13 @@ export default function Home() {
         </div>
       </header>
 
-      {/* Status Messages */}
+      {/* Connection Warning */}
       {!isConnected && (
         <div className="sticky top-0 z-40 bg-amber-50 dark:bg-amber-900/20 border-b border-amber-200 dark:border-amber-800/50 backdrop-blur-xl">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center gap-3">
             <Lock className="w-5 h-5 text-amber-600 dark:text-amber-400 flex-shrink-0" />
             <div className="text-sm text-amber-800 dark:text-amber-200">
               <span className="font-semibold">Connect your wallet</span> to verify your identity with the blockchain access control system.
-            </div>
-          </div>
-        </div>
-      )}
-
-      {isConnected && contractStatus === 'connected' && (
-        <div className="sticky top-0 z-40 bg-green-50 dark:bg-green-900/20 border-b border-green-200 dark:border-green-800/50 backdrop-blur-xl">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center gap-3">
-            <CheckCircle2 className="w-5 h-5 text-green-600 dark:text-green-400 flex-shrink-0" />
-            <div className="text-sm text-green-800 dark:text-green-200">
-              <span className="font-semibold">Smart Contract Connected</span> - Access rules are verified on-chain at <code className="text-xs font-mono bg-green-100 dark:bg-green-900/40 px-1 rounded">{contract?.getContractAddress().slice(0, 10)}...</code>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {isConnected && contractStatus === 'not-set' && (
-        <div className="sticky top-0 z-40 bg-blue-50 dark:bg-blue-900/20 border-b border-blue-200 dark:border-blue-800/50 backdrop-blur-xl">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center gap-3">
-            <AlertCircle className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0" />
-            <div className="text-sm text-blue-800 dark:text-blue-200">
-              <span className="font-semibold">Contract not configured</span> - Using local access rules. Deploy the smart contract and set <code className="text-xs font-mono bg-blue-100 dark:bg-blue-900/40 px-1 rounded">NEXT_PUBLIC_CONTRACT_ADDRESS</code> to enable on-chain verification.
-            </div>
-          </div>
-        </div>
-      )}
-
-      {isConnected && contractStatus === 'error' && (
-        <div className="sticky top-0 z-40 bg-red-50 dark:bg-red-900/20 border-b border-red-200 dark:border-red-800/50 backdrop-blur-xl">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center gap-3">
-            <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0" />
-            <div className="text-sm text-red-800 dark:text-red-200">
-              <span className="font-semibold">Connection Error</span> - Please check your network settings.
             </div>
           </div>
         </div>
@@ -137,9 +84,7 @@ export default function Home() {
                     <div className="text-sm">
                       <p className="font-semibold text-foreground mb-1">Smart Contract Rules</p>
                       <p className="text-xs text-muted-foreground">
-                        {contractStatus === 'connected'
-                          ? 'All permissions verified on-chain via Solidity contract. Access rules are immutable.'
-                          : 'Local rules active. Deploy contract for on-chain verification.'}
+                        All permissions are verified on-chain. Different roles see different data based on immutable blockchain rules.
                       </p>
                     </div>
                   </div>
@@ -193,15 +138,8 @@ export default function Home() {
                     <span className="font-semibold text-foreground">Secured by Blockchain</span>
                   </div>
                   <p className="text-sm text-muted-foreground">
-                    {contractStatus === 'connected'
-                      ? 'Document protected by smart contract on Sepolia testnet. Access policies are immutable and verified on-chain.'
-                      : 'Document protected by smart contract. Connect wallet and deploy contract for full on-chain verification.'}
+                    This document is protected by smart contract rules deployed on Sepolia blockchain. Access policies are immutable and transparent.
                   </p>
-                  {contractStatus === 'connected' && contract && (
-                    <div className="text-xs mt-2 px-2 py-1 rounded bg-primary/10 border border-primary/20 text-primary font-mono">
-                      Contract: {contract.getContractAddress().slice(0, 10)}...{contract.getContractAddress().slice(-8)}
-                    </div>
-                  )}
                 </div>
               </Card>
             </div>

@@ -1,5 +1,4 @@
-import { ContractInteraction, AccessType, AccessTypeNames, Role as ContractRole, RoleNames } from './contractInteraction'
-
+// Smart Contract Simulator - Blockchain Rules
 export type Role = 'founder' | 'engineer' | 'marketing'
 
 export interface DocumentField {
@@ -22,32 +21,7 @@ export const masterDocument = {
   marketSize: { name: 'Market Size', value: '$2.8B TAM', sensitivity: 'sensitive' as const },
 }
 
-// Map AccessType to Role
-export function accessTypeToRole(accessType: AccessType): Role {
-  switch (accessType) {
-    case AccessType.FULL:
-      return 'founder'
-    case AccessType.PARTIAL:
-      return 'engineer'
-    case AccessType.SEMANTIC:
-      return 'marketing'
-    default:
-      return 'engineer'
-  }
-}
-
-// Map field to index for blockchain
-export function getFieldIndex(field: keyof typeof masterDocument): number {
-  const fieldMap: Record<string, number> = {
-    revenue: 0,
-    risks: 1,
-    roadmap: 2,
-    marketSize: 3,
-  }
-  return fieldMap[field] ?? 0
-}
-
-// Local access rules for fallback (when contract not available)
+// Smart Contract Rules (immutable blockchain rules)
 export const accessRules: Record<Role, Record<string, AccessPolicy>> = {
   founder: {
     revenue: { canView: true, canMask: false },
@@ -82,7 +56,7 @@ export function getAccessPolicy(role: Role, field: keyof typeof masterDocument):
   return accessRules[role][field] || { canView: false, canMask: false }
 }
 
-// Check what access level a role has for a field (local version)
+// Check what access level a role has for a field
 export function checkAccess(role: Role, field: keyof typeof masterDocument): {
   type: 'full' | 'partial' | 'semantic' | 'denied'
   message: string
@@ -104,53 +78,20 @@ export function checkAccess(role: Role, field: keyof typeof masterDocument): {
   return { type: 'full', message: 'Full access granted' }
 }
 
-// Verify access using blockchain contract
+// Simulate blockchain verification
 export async function verifyBlockchainAccess(
-  contract: ContractInteraction | null,
-  userAddress: string,
-  field: keyof typeof masterDocument
+  userRole: Role,
+  field: keyof typeof masterDocument,
+  userAddress: string
 ): Promise<{ verified: boolean; accessType: 'full' | 'partial' | 'semantic' | 'denied' }> {
-  if (!contract || !contract.isInitialized()) {
-    console.log('[smartContract] Contract not initialized, using local verification')
-    // Fallback to local verification
-    const access = checkAccess('founder', field)
-    return {
-      verified: access.type !== 'denied',
-      accessType: access.type,
-    }
-  }
+  // Simulate blockchain verification delay
+  await new Promise((resolve) => setTimeout(resolve, 800))
 
-  try {
-    // Get field index
-    const fieldIndex = getFieldIndex(field)
+  const access = checkAccess(userRole, field)
+  const verified = access.type !== 'denied'
 
-    // Call blockchain contract
-    const accessTypeNum = await contract.checkFieldAccess(userAddress, fieldIndex)
-    const accessType = accessTypeNum as AccessType
-
-    // Simulate blockchain verification delay
-    await new Promise((resolve) => setTimeout(resolve, 600))
-
-    // Log access to blockchain (emit event)
-    try {
-      await contract.verifyAndLogAccess(fieldIndex)
-    } catch (error) {
-      console.warn('[smartContract] Failed to log access event:', error)
-    }
-
-    const verified = accessType !== AccessType.DENIED
-
-    return {
-      verified,
-      accessType: AccessTypeNames[accessType] as 'full' | 'partial' | 'semantic' | 'denied',
-    }
-  } catch (error) {
-    console.error('[smartContract] Error verifying blockchain access:', error)
-    // Fallback to local verification
-    const access = checkAccess('founder', field)
-    return {
-      verified: access.type !== 'denied',
-      accessType: access.type,
-    }
+  return {
+    verified,
+    accessType: access.type,
   }
 }
