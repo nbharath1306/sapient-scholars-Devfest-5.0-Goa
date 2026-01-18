@@ -1,5 +1,5 @@
 import React from "react"
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import { MetaMaskProvider } from './providers'
@@ -9,31 +9,32 @@ const _geist = Geist({ subsets: ["latin"] });
 const _geistMono = Geist_Mono({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: 'GateKeep - Blockchain Access Control',
-  description: 'Role-based document access control powered by blockchain and MetaMask',
+  title: 'GateKeep - AI-Powered Blockchain Document Access Control',
+  description: 'Secure your sensitive documents with wallet-based authentication and AI-powered semantic masking. Role-based access control powered by blockchain technology.',
+  keywords: ['blockchain', 'document security', 'access control', 'MetaMask', 'AI', 'semantic masking', 'Web3', 'DevFest', 'Goa', 'hackathon'],
   icons: {
-    icon: [
-      {
-        url: '/icon-light-32x32.png',
-        media: '(prefers-color-scheme: light)',
-      },
-      {
-        url: '/icon-dark-32x32.png',
-        media: '(prefers-color-scheme: dark)',
-      },
-      {
-        url: '/icon.svg',
-        type: 'image/svg+xml',
-      },
-    ],
-    apple: '/apple-icon.png',
+    icon: '/favicon.svg',
+    apple: '/favicon.svg',
   },
-  viewport: {
-    width: 'device-width',
-    initialScale: 1,
-    maximumScale: 1,
-    userScalable: false,
+  openGraph: {
+    title: 'GateKeep - AI-Powered Blockchain Document Access Control',
+    description: 'Secure your sensitive documents with wallet-based authentication and AI-powered semantic masking. Built for DevFest 5.0 Goa.',
+    type: 'website',
+    images: ['/og-image.svg'],
   },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'GateKeep - AI-Powered Blockchain Document Access Control',
+    description: 'Secure your sensitive documents with wallet-based authentication and AI-powered semantic masking.',
+    images: ['/og-image.svg'],
+  },
+}
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
 }
 
 export default function RootLayout({

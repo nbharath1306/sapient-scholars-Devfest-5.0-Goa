@@ -1,6 +1,6 @@
 // Supabase-based storage for wallet roles and access requests
 
-import { supabase } from './supabase'
+import { supabase, isSupabaseConfigured } from './supabase'
 import type { Role } from './smartContract'
 
 export interface WalletRole {
@@ -24,6 +24,7 @@ export interface AccessRequest {
 
 // Get role for a specific wallet
 export async function getWalletRole(walletAddress: string): Promise<Role | null> {
+  if (!supabase) return null
   const normalizedAddress = walletAddress.toLowerCase()
   
   const { data, error } = await supabase
@@ -38,6 +39,7 @@ export async function getWalletRole(walletAddress: string): Promise<Role | null>
 
 // Check if a wallet is the owner
 export async function isOwner(walletAddress: string): Promise<boolean> {
+  if (!supabase) return false
   const normalizedAddress = walletAddress.toLowerCase()
   
   const { data, error } = await supabase
@@ -52,6 +54,7 @@ export async function isOwner(walletAddress: string): Promise<boolean> {
 
 // Check if system has an owner
 export async function hasOwner(): Promise<boolean> {
+  if (!supabase) return false
   const { data, error } = await supabase
     .from('wallet_roles')
     .select('id')
@@ -64,6 +67,7 @@ export async function hasOwner(): Promise<boolean> {
 
 // Get owner wallet address
 export async function getOwnerWallet(): Promise<string | null> {
+  if (!supabase) return null
   const { data, error } = await supabase
     .from('wallet_roles')
     .select('wallet_address')
@@ -76,6 +80,7 @@ export async function getOwnerWallet(): Promise<string | null> {
 
 // Set owner wallet (only if not already set)
 export async function setOwnerWallet(walletAddress: string): Promise<boolean> {
+  if (!supabase) return false
   const normalizedAddress = walletAddress.toLowerCase()
   
   // Check if owner already exists
@@ -95,6 +100,7 @@ export async function setOwnerWallet(walletAddress: string): Promise<boolean> {
 
 // Assign role to a wallet
 export async function assignRole(walletAddress: string, role: Role, name?: string): Promise<boolean> {
+  if (!supabase) return false
   const normalizedAddress = walletAddress.toLowerCase()
   const isOwnerRole = role === 'owner'
   
@@ -129,6 +135,7 @@ export async function assignRole(walletAddress: string, role: Role, name?: strin
 
 // Remove role from a wallet
 export async function removeRole(walletAddress: string): Promise<boolean> {
+  if (!supabase) return false
   const normalizedAddress = walletAddress.toLowerCase()
   
   // Don't allow removing owner's role
@@ -145,6 +152,7 @@ export async function removeRole(walletAddress: string): Promise<boolean> {
 
 // Get all assigned wallets with their roles
 export async function getAllAssignedWallets(): Promise<WalletRole[]> {
+  if (!supabase) return []
   const { data, error } = await supabase
     .from('wallet_roles')
     .select('wallet_address, role, is_owner, name')
@@ -168,6 +176,7 @@ export async function submitAccessRequest(
   name: string, 
   requestedRole: Role
 ): Promise<AccessRequest | null> {
+  if (!supabase) return null
   const normalizedAddress = walletAddress.toLowerCase()
   
   // Check if there's already a pending request - delete it first
@@ -204,6 +213,7 @@ export async function submitAccessRequest(
 
 // Get pending requests (for owner dashboard)
 export async function getPendingRequests(): Promise<AccessRequest[]> {
+  if (!supabase) return []
   const { data, error } = await supabase
     .from('access_requests')
     .select('*')
@@ -225,6 +235,7 @@ export async function getPendingRequests(): Promise<AccessRequest[]> {
 
 // Get request status for a wallet (most recent)
 export async function getRequestStatus(walletAddress: string): Promise<AccessRequest | null> {
+  if (!supabase) return null
   const normalizedAddress = walletAddress.toLowerCase()
   
   const { data, error } = await supabase
@@ -250,6 +261,7 @@ export async function getRequestStatus(walletAddress: string): Promise<AccessReq
 
 // Check if wallet has a pending request
 export async function hasPendingRequest(walletAddress: string): Promise<boolean> {
+  if (!supabase) return false
   const normalizedAddress = walletAddress.toLowerCase()
   
   const { data, error } = await supabase
@@ -265,6 +277,7 @@ export async function hasPendingRequest(walletAddress: string): Promise<boolean>
 
 // Approve access request
 export async function approveAccessRequest(requestId: string, approvedRole?: Role): Promise<boolean> {
+  if (!supabase) return false
   // Get the request first
   const { data: request, error: fetchError } = await supabase
     .from('access_requests')
@@ -295,6 +308,7 @@ export async function approveAccessRequest(requestId: string, approvedRole?: Rol
 
 // Decline access request
 export async function declineAccessRequest(requestId: string): Promise<boolean> {
+  if (!supabase) return false
   const { error } = await supabase
     .from('access_requests')
     .update({
@@ -310,6 +324,7 @@ export async function declineAccessRequest(requestId: string): Promise<boolean> 
 
 // Subscribe to access request changes (for owner dashboard)
 export function subscribeToAccessRequests(callback: (requests: AccessRequest[]) => void) {
+  if (!supabase) return () => {}
   const channel = supabase
     .channel('access_requests_changes')
     .on(
@@ -337,6 +352,7 @@ export function subscribeToWalletRole(
   walletAddress: string, 
   callback: (role: Role | null) => void
 ) {
+  if (!supabase) return () => {}
   const normalizedAddress = walletAddress.toLowerCase()
   
   const channel = supabase
@@ -366,6 +382,7 @@ export function subscribeToRequestStatus(
   walletAddress: string,
   callback: (request: AccessRequest | null) => void
 ) {
+  if (!supabase) return () => {}
   const normalizedAddress = walletAddress.toLowerCase()
   
   const channel = supabase

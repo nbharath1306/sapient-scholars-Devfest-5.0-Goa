@@ -32,6 +32,7 @@ export interface DocumentWithAccess extends Document {
 
 // Get all documents
 export async function getAllDocuments(): Promise<Document[]> {
+  if (!supabase) return []
   const { data, error } = await supabase
     .from('documents')
     .select('*')
@@ -52,6 +53,7 @@ export async function getAllDocuments(): Promise<Document[]> {
 
 // Get document by field key
 export async function getDocumentByKey(fieldKey: string): Promise<Document | null> {
+  if (!supabase) return null
   const { data, error } = await supabase
     .from('documents')
     .select('*')
@@ -78,6 +80,7 @@ export async function createDocument(
   value: string,
   sensitivity: Sensitivity
 ): Promise<Document | null> {
+  if (!supabase) return null
   const { data, error } = await supabase
     .from('documents')
     .insert({
@@ -121,6 +124,7 @@ export async function updateDocument(
   id: string,
   updates: { name?: string; value?: string; sensitivity?: Sensitivity }
 ): Promise<boolean> {
+  if (!supabase) return false
   const updateData: Record<string, string> = {}
   if (updates.name) updateData.name = updates.name
   if (updates.value) updateData.value = updates.value
@@ -136,6 +140,7 @@ export async function updateDocument(
 
 // Delete document
 export async function deleteDocument(id: string): Promise<boolean> {
+  if (!supabase) return false
   const { error } = await supabase
     .from('documents')
     .delete()
@@ -148,6 +153,7 @@ export async function deleteDocument(id: string): Promise<boolean> {
 
 // Get access rules for a document
 export async function getAccessRules(documentId: string): Promise<AccessRule[]> {
+  if (!supabase) return []
   const { data, error } = await supabase
     .from('access_rules')
     .select('*')
@@ -166,6 +172,7 @@ export async function getAccessRules(documentId: string): Promise<AccessRule[]> 
 
 // Get access rule for specific document and role
 export async function getAccessRule(documentId: string, role: Role): Promise<AccessRule | null> {
+  if (!supabase) return null
   const { data, error } = await supabase
     .from('access_rules')
     .select('*')
@@ -191,6 +198,7 @@ export async function updateAccessRule(
   canView: boolean,
   maskType: MaskType
 ): Promise<boolean> {
+  if (!supabase) return false
   // Upsert the rule
   const { error } = await supabase
     .from('access_rules')
@@ -208,6 +216,7 @@ export async function updateAccessRule(
 
 // Get all documents with their access rules
 export async function getDocumentsWithAccess(): Promise<DocumentWithAccess[]> {
+  if (!supabase) return []
   const [documents, rules] = await Promise.all([
     getAllDocuments(),
     supabase.from('access_rules').select('*'),
@@ -238,6 +247,7 @@ export async function getDocumentsWithAccess(): Promise<DocumentWithAccess[]> {
 
 // Get access policy for a role and document (used for rendering)
 export async function getDocumentAccessForRole(role: Role): Promise<Map<string, { canView: boolean; maskType: MaskType }>> {
+  if (!supabase) return new Map()
   const { data, error } = await supabase
     .from('access_rules')
     .select('document_id, can_view, mask_type, documents!inner(field_key)')
@@ -262,6 +272,7 @@ export async function getDocumentAccessForRole(role: Role): Promise<Map<string, 
 
 // Subscribe to document changes
 export function subscribeToDocuments(callback: (documents: Document[]) => void) {
+  if (!supabase) return () => {}
   const channel = supabase
     .channel('documents_changes')
     .on(
@@ -285,6 +296,7 @@ export function subscribeToDocuments(callback: (documents: Document[]) => void) 
 
 // Subscribe to access rule changes
 export function subscribeToAccessRules(callback: () => void) {
+  if (!supabase) return () => {}
   const channel = supabase
     .channel('access_rules_changes')
     .on(

@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bg-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0A0A0F;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#0F0F1A;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1A0A1F;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="text-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#8B5CF6;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#D946EF;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#06B6D4;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="shield-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#8B5CF6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#D946EF;stop-opacity:1" />
+    </linearGradient>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="8" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="1200" height="630" fill="url(#bg-grad)"/>
+  
+  <!-- Grid pattern -->
+  <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+    <path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(139,92,246,0.1)" stroke-width="1"/>
+  </pattern>
+  <rect width="1200" height="630" fill="url(#grid)"/>
+  
+  <!-- Floating orbs -->
+  <circle cx="150" cy="100" r="80" fill="rgba(139,92,246,0.15)" filter="blur(40px)"/>
+  <circle cx="1050" cy="530" r="100" fill="rgba(217,70,239,0.15)" filter="blur(50px)"/>
+  <circle cx="900" cy="150" r="60" fill="rgba(6,182,212,0.15)" filter="blur(30px)"/>
+  
+  <!-- Shield Logo -->
+  <g transform="translate(200, 215)" filter="url(#glow)">
+    <path d="M100 0L0 32V120C0 184 64 232 100 248C136 232 200 184 200 120V32L100 0Z" fill="url(#shield-grad)" opacity="0.9"/>
+    <path d="M100 20L20 48V120C20 172 76 212 100 224C124 212 180 172 180 120V48L100 20Z" fill="rgba(6,182,212,0.3)"/>
+    <!-- Lock -->
+    <rect x="50" y="100" width="100" height="80" rx="10" fill="white" opacity="0.95"/>
+    <path d="M65 100V75C65 55 80 40 100 40C120 40 135 55 135 75V100" stroke="white" stroke-width="15" stroke-linecap="round" fill="none"/>
+    <circle cx="100" cy="132" r="15" fill="url(#shield-grad)"/>
+    <path d="M100 143L94 168H106L100 143Z" fill="url(#shield-grad)"/>
+  </g>
+  
+  <!-- Main Title -->
+  <text x="440" y="300" font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="96" font-weight="800" fill="url(#text-grad)" filter="url(#glow)">GateKeep</text>
+  
+  <!-- Tagline -->
+  <text x="440" y="370" font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="32" font-weight="500" fill="white" opacity="0.9">AI-Powered Document Access Control</text>
+  
+  <!-- Subtitle -->
+  <text x="440" y="420" font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="24" font-weight="400" fill="white" opacity="0.6">Blockchain Security • Semantic Masking • Role-Based Access</text>
+  
+  <!-- DevFest badge -->
+  <g transform="translate(920, 50)">
+    <rect x="0" y="0" width="230" height="60" rx="30" fill="rgba(255,255,255,0.1)" stroke="rgba(139,92,246,0.5)" stroke-width="2"/>
+    <text x="115" y="38" font-family="system-ui, sans-serif" font-size="20" font-weight="600" fill="white" text-anchor="middle">🎯 DevFest 5.0 Goa</text>
+  </g>
+  
+  <!-- Sparkles -->
+  <path d="M800 250L808 266L824 274L808 282L800 298L792 282L776 274L792 266L800 250Z" fill="#FFD700" opacity="0.8"/>
+  <path d="M950 380L956 392L968 398L956 404L950 416L944 404L932 398L944 392L950 380Z" fill="#FFD700" opacity="0.6"/>
+  
+  <!-- Tech icons hint -->
+  <g transform="translate(440, 480)" opacity="0.5">
+    <text font-family="system-ui, sans-serif" font-size="16" fill="white">Built with Next.js • MetaMask • Gemini AI • Supabase</text>
+  </g>
+</svg>
