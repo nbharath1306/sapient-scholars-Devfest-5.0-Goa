@@ -1,4 +1,4 @@
--- Supabase SQL Schema for Event Horizon
+-- Supabase SQL Schema for GateKeep
 -- Run this in your Supabase SQL Editor
 
 -- Table: wallet_roles

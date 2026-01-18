@@ -9,9 +9,8 @@ const _geist = Geist({ subsets: ["latin"] });
 const _geistMono = Geist_Mono({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: 'Event Horizon - Blockchain Access Control',
+  title: 'GateKeep - Blockchain Access Control',
   description: 'Role-based document access control powered by blockchain and MetaMask',
-  generator: 'v0.app',
   icons: {
     icon: [
       {
@@ -34,7 +33,6 @@ export const metadata: Metadata = {
     initialScale: 1,
     maximumScale: 1,
     userScalable: false,
-    themeColor: '#6b72e2',
   },
 }
 

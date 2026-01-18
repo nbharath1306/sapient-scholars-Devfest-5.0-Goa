@@ -6,32 +6,65 @@ import { RoleSwitcher } from '@/components/RoleSwitcher'
 import { RoleManager } from '@/components/RoleManager'
 import { AccessRequestForm } from '@/components/AccessRequestForm'
 import { AccessRequestsDashboard } from '@/components/AccessRequestsDashboard'
+import { DocumentManager } from '@/components/DocumentManager'
 import { DocumentField } from '@/components/DocumentField'
 import { useMetaMask } from '@/app/providers'
-import {
-  masterDocument,
-  checkAccess,
-  type Role,
-} from '@/lib/smartContract'
+import type { Role } from '@/lib/smartContract'
+import { 
+  getDocumentsWithAccess, 
+  subscribeToDocuments,
+  subscribeToAccessRules,
+  type DocumentWithAccess,
+  type MaskType,
+} from '@/lib/documentStorage'
 import { Card } from '@/components/ui/card'
-import { Zap, Lock, Shield } from 'lucide-react'
+import { Zap, Lock, Shield, Loader2 } from 'lucide-react'
 
 export default function Home() {
   const { isConnected, currentRole, hasAccess, isOwner } = useMetaMask()
-  const [accessCache, setAccessCache] = useState<Record<string, any>>({})
+  const [documents, setDocuments] = useState<DocumentWithAccess[]>([])
+  const [isLoadingDocs, setIsLoadingDocs] = useState(true)
 
-  // Precompute access policies when role changes
-  useEffect(() => {
-    if (currentRole) {
-      const cache: Record<string, any> = {}
-      Object.keys(masterDocument).forEach((field) => {
-        cache[field] = checkAccess(currentRole, field as keyof typeof masterDocument)
-      })
-      setAccessCache(cache)
-    } else {
-      setAccessCache({})
+  // Fetch documents from Supabase
+  const fetchDocuments = async () => {
+    try {
+      const docs = await getDocumentsWithAccess()
+      setDocuments(docs)
+    } catch (err) {
+      console.error('Failed to fetch documents:', err)
+    } finally {
+      setIsLoadingDocs(false)
     }
-  }, [currentRole])
+  }
+
+  // Load documents and subscribe to changes
+  useEffect(() => {
+    fetchDocuments()
+    
+    const unsubDocs = subscribeToDocuments(() => {
+      fetchDocuments()
+    })
+    
+    const unsubRules = subscribeToAccessRules(() => {
+      fetchDocuments()
+    })
+    
+    return () => {
+      unsubDocs()
+      unsubRules()
+    }
+  }, [])
+
+  // Helper to get access type for a document and role
+  const getAccessType = (doc: DocumentWithAccess, role: Role): 'full' | 'partial' | 'semantic' | 'denied' => {
+    const rules = doc.accessRules[role]
+    if (!rules) return 'denied'
+    if (!rules.canView) return 'denied'
+    if (rules.maskType === 'none') return 'full'
+    if (rules.maskType === 'partial') return 'partial'
+    if (rules.maskType === 'semantic') return 'semantic'
+    return 'denied'
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
@@ -43,14 +76,12 @@ export default function Home() {
 
       {/* Header */}
       <header className="relative border-b border-border/50 backdrop-blur-xl bg-background/80">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center">
-                <Zap className="w-6 h-6 text-white" />
-              </div>
+              <img src="/logo2.png" alt="GateKeep" className="w-12 h-12 object-contain" />
               <div>
-                <h1 className="text-2xl font-bold text-foreground">Event Horizon</h1>
+                <h1 className="text-2xl font-bold text-foreground">GateKeep</h1>
                 <p className="text-xs text-muted-foreground">Blockchain Access Control System</p>
               </div>
             </div>
@@ -84,11 +115,11 @@ export default function Home() {
       )}
 
       {/* Main Content */}
-      <main className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-          {/* Sidebar */}
-          <aside className="lg:col-span-1">
-            <div className="sticky top-24 space-y-6">
+      <main className="relative max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          {/* Left Sidebar - Role Management */}
+          <aside className="lg:col-span-3">
+            <div className="sticky top-24 space-y-4">
               {/* Role Switcher Card */}
               <Card className="p-4 border-border/50">
                 <RoleSwitcher />
@@ -99,51 +130,11 @@ export default function Home() {
 
               {/* Role Manager (only for owner) */}
               <RoleManager />
-
-              {/* Info Card */}
-              <Card className="p-4 border-border/50 bg-primary/5">
-                <div className="space-y-3">
-                  <div className="flex items-start gap-2">
-                    <Zap className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
-                    <div className="text-sm">
-                      <p className="font-semibold text-foreground mb-1">Wallet-Based Access</p>
-                      <p className="text-xs text-muted-foreground">
-                        Your role is determined by your connected wallet address. The document owner assigns roles to specific wallets.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </Card>
-
-              {/* Role Legend */}
-              <Card className="p-4 border-border/50">
-                <div className="space-y-2">
-                  <p className="text-xs font-semibold text-muted-foreground mb-3">Access Legend</p>
-                  <div className="space-y-2 text-xs">
-                    <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 rounded-full bg-green-500" />
-                      <span>Full Access</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 rounded-full bg-yellow-500" />
-                      <span>Partially Masked</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 rounded-full bg-blue-500" />
-                      <span>Semantically Masked (AI)</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 rounded-full bg-red-500" />
-                      <span>Access Denied</span>
-                    </div>
-                  </div>
-                </div>
-              </Card>
             </div>
           </aside>
 
           {/* Main Content Area */}
-          <div className="lg:col-span-3">
+          <div className="lg:col-span-6">
             {/* Hero Section */}
             <div className="mb-8">
               <div className="space-y-2 mb-6">
@@ -180,23 +171,34 @@ export default function Home() {
 
             {/* Document Fields Grid - Only show if user has access */}
             {hasAccess && currentRole ? (
-              <div className="space-y-4">
-                {Object.entries(masterDocument).map(([key, field]) => {
-                  const access = accessCache[key]
-                  if (!access) return null
+              isLoadingDocs ? (
+                <div className="flex items-center justify-center py-12">
+                  <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                </div>
+              ) : documents.length === 0 ? (
+                <Card className="p-8 border-border/50 bg-muted/20">
+                  <div className="text-center space-y-4">
+                    <p className="text-muted-foreground">No documents available yet.</p>
+                  </div>
+                </Card>
+              ) : (
+                <div className="space-y-4">
+                  {documents.map((doc) => {
+                    const accessType = getAccessType(doc, currentRole)
 
-                  return (
-                    <DocumentField
-                      key={key}
-                      fieldName={field.name}
-                      fieldValue={field.value}
-                      sensitivity={field.sensitivity}
-                      accessType={access.type}
-                      role={currentRole}
-                    />
-                  )
-                })}
-              </div>
+                    return (
+                      <DocumentField
+                        key={doc.id}
+                        fieldName={doc.name}
+                        fieldValue={doc.value}
+                        sensitivity={doc.sensitivity}
+                        accessType={accessType}
+                        role={currentRole}
+                      />
+                    )
+                  })}
+                </div>
+              )
             ) : isConnected ? (
               /* Show Access Request Form for connected users without access */
               <AccessRequestForm />
@@ -221,14 +223,62 @@ export default function Home() {
             <Card className="mt-8 p-4 border-border/50 bg-muted/30">
               <div className="text-xs text-muted-foreground space-y-2">
                 <p>
-                  <span className="font-semibold">How it works:</span> The first wallet to connect becomes the document owner with Founder access. The owner can then assign roles (Engineer, Marketing) to other wallet addresses.
+                  <span className="font-semibold">How it works:</span> The first wallet to connect becomes the document owner. Owners and Founders can add, edit, and delete documents, and set access rules for each role.
                 </p>
                 <p>
-                  Each role has different access levels: <span className="font-semibold">Founders</span> see everything, <span className="font-semibold">Engineers</span> have partial access with some fields masked, and <span className="font-semibold">Marketing</span> sees AI-powered semantic masking for sensitive data.
+                  <span className="font-semibold">Access levels:</span> <span className="text-green-500">Full Access</span> sees everything, <span className="text-yellow-500">Partial Mask</span> shows first/last characters only, <span className="text-blue-500">AI Semantic</span> uses Gemini to rewrite sensitive content, and <span className="text-red-500">Denied</span> blocks access completely.
                 </p>
               </div>
             </Card>
           </div>
+
+          {/* Right Sidebar - Document Management & Info */}
+          <aside className="lg:col-span-3">
+            <div className="sticky top-24 space-y-4">
+              {/* Document Manager (only for owner/founder) */}
+              <DocumentManager />
+
+              {/* Info Card */}
+              <Card className="p-4 border-border/50 bg-primary/5">
+                <div className="space-y-3">
+                  <div className="flex items-start gap-2">
+                    <Zap className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
+                    <div className="text-sm">
+                      <p className="font-semibold text-foreground mb-1">Wallet-Based Access</p>
+                      <p className="text-xs text-muted-foreground">
+                        Your role is determined by your connected wallet address. The document owner assigns roles to specific wallets.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </Card>
+
+              {/* Access Legend */}
+              <Card className="p-4 border-border/50">
+                <div className="space-y-2">
+                  <p className="text-xs font-semibold text-muted-foreground mb-3">Access Legend</p>
+                  <div className="space-y-2 text-xs">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-green-500" />
+                      <span>Full Access</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-yellow-500" />
+                      <span>Partially Masked</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-blue-500" />
+                      <span>Semantically Masked (AI)</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-red-500" />
+                      <span>Access Denied</span>
+                    </div>
+                  </div>
+                </div>
+              </Card>
+            </div>
+          </aside>
         </div>
       </main>
     </div>
